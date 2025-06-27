@@ -10,13 +10,20 @@ class Pet extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'species', 'breed', 'size', 'age',
-        'vaccinated', 'food_type', 'photo_path', 
-        'location', 'last_vaccination', 'owner_id'
+        'name',
+        'species',
+        'breed',
+        'size',
+        'age',  
+        'vaccinated',
+        'food_type',
+        'photo_path',
+        'last_vaccination',
+        'owner_id',
+        'status'
     ];
 
     protected $casts = [
-        'location' => 'array',
         'vaccinated' => 'boolean',
         'last_vaccination' => 'date'
     ];
@@ -24,5 +31,15 @@ class Pet extends Model
     public function owner()
     {
         return $this->belongsTo(Owner::class);
+    }
+
+    public function getPhotoUrlAttribute()
+    {
+        return $this->photo_path ? Storage::url($this->photo_path) : null;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'HABILITADO');
     }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
 function PetList() {
@@ -10,6 +10,7 @@ function PetList() {
         species: '',
         vaccinated: ''
     });
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPets = async () => {
@@ -26,6 +27,29 @@ function PetList() {
         fetchPets();
     }, []);
 
+    const handleLogout = async () => {
+        try {
+            await api.logout();
+            localStorage.removeItem('token');
+            navigate('/login');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
+    };
+
+    const handleDelete = async (petId) => {
+        if (window.confirm('¿Estás seguro de deshabilitar esta mascota?')) {
+            try {
+                await api.deletePet(petId);
+                // Actualizar lista después de deshabilitar
+                const response = await api.getPets();
+                setPets(response.data);
+            } catch (error) {
+                console.error('Error deleting pet:', error);
+            }
+        }
+    };
+
     const filteredPets = pets.filter(pet => {
         const matchesSearch = pet.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                              pet.breed.toLowerCase().includes(searchTerm.toLowerCase());
@@ -40,6 +64,20 @@ function PetList() {
 
     return (
         <div>
+            {/* Barra superior con título y botones */}
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1>Sistema de Censo de Mascotas</h1>
+                <div>
+                    <Link to="/pets/new" className="btn btn-primary me-2">
+                        Registrar Nueva Mascota
+                    </Link>
+                    <button onClick={handleLogout} className="btn btn-outline-danger">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+
+            {/* Filtros de búsqueda */}
             <div className="row mb-4">
                 <div className="col-md-6">
                     <input
@@ -75,14 +113,10 @@ function PetList() {
                 </div>
             </div>
 
+            {/* Listado de mascotas */}
             <div className="row">
                 <div className="col">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h2>Listado de Mascotas</h2>
-                        <Link to="/pets/new" className="btn btn-primary">
-                            Registrar Nueva Mascota
-                        </Link>
-                    </div>
+                    <h2>Listado de Mascotas</h2>
 
                     {filteredPets.length === 0 ? (
                         <div className="alert alert-info">No se encontraron mascotas</div>
@@ -108,12 +142,18 @@ function PetList() {
                                             <td>{pet.size}</td>
                                             <td>{pet.vaccinated ? 'Sí' : 'No'}</td>
                                             <td>
-                                                <Link to={`/pets/${pet.id}`} className="btn btn-sm btn-info mr-2">
+                                                 <Link to={`/pets/${pet.id}`} className="btn btn-sm btn-info me-2">
                                                     Ver
                                                 </Link>
-                                                <Link to={`/pets/${pet.id}/edit`} className="btn btn-sm btn-warning">
+                                                <Link to={`/pets/${pet.id}/edit`} className="btn btn-sm btn-warning me-2">
                                                     Editar
                                                 </Link>
+                                                <button 
+                                                    onClick={() => handleDelete(pet.id)} 
+                                                    className="btn btn-sm btn-danger"
+                                                >
+                                                    Deshabilitar
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

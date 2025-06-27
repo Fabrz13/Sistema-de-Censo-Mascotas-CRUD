@@ -2,14 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Owner extends Model
+class Owner extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, Notifiable;
 
-    protected $fillable = ['name', 'address', 'phone'];
+    protected $fillable = [
+        'name', 
+        'address', 
+        'phone',
+        'email', // Nuevo campo necesario para login
+        'password' // Nuevo campo
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     public function pets()
     {
