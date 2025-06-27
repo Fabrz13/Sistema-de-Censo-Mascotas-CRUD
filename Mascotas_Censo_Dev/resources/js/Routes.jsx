@@ -11,35 +11,33 @@ const PrivateRoute = ({ children }) => {
 
 export default function AppRoutes() {
     return (
-        <Router>
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                
-                <Route path="/" element={
-                    <PrivateRoute>
-                        <PetList />
-                    </PrivateRoute>
-                } />
-                
-                <Route path="/pets/new" element={
-                    <PrivateRoute>
-                        <PetForm />
-                    </PrivateRoute>
-                } />
+        <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            <Route path="/" element={
+                <PrivateRoute>
+                    <PetList />
+                </PrivateRoute>
+            } />
+            
+            <Route path="/pets/new" element={
+                <PrivateRoute>
+                    <PetForm />
+                </PrivateRoute>
+            } />
 
-                <Route path="/pets/:id" element={
+            <Route path="/pets/:id" element={
                 <PrivateRoute>
                     <PetForm action="view" />
                 </PrivateRoute>
-                } />
+            } />
 
-                <Route path="/pets/:id/edit" element={
-                    <PrivateRoute>
-                        <PetForm action="edit" />
-                    </PrivateRoute>
-                } />
-            </Routes>
-        </Router>
+            <Route path="/pets/:id/edit" element={
+                <PrivateRoute>
+                    <PetForm action="edit" />
+                </PrivateRoute>
+            } />
+        </Routes>
     );
 }

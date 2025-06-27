@@ -88,7 +88,6 @@ function PetForm() {
             const formDataToSend = new FormData();
             
             // Solo campos editables
-            formDataToSend.append('_method', 'PUT'); // Importante para Laravel
             formDataToSend.append('name', formData.name);
             formDataToSend.append('species', formData.species);
             formDataToSend.append('breed', formData.breed);
@@ -109,7 +108,15 @@ function PetForm() {
                 console.log(`FormData: ${key} =`, value);
             }
 
+            if (id) {
+            // Actualización - Usar PUT
+            formDataToSend.append('_method', 'PUT');
             await api.updatePet(id, formDataToSend);
+            } else {
+                // Creación - Usar POST
+                await api.createPet(formDataToSend);
+            }
+
             navigate('/');
         } catch (error) {
             console.error('Error saving pet:', error);

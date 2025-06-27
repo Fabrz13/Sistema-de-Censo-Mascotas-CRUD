@@ -1,16 +1,22 @@
-import '../css/app.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './bootstrap';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './Routes';
+import MainLayout from './components/layout/MainLayout';
+import { AuthProvider } from './context/AuthContext';
+import '../css/app.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function App() {
     return (
-        <div className="container py-4">
-            <h1 className="text-center mb-4">Censo de Mascotas</h1>
-            <AppRoutes />
-        </div>
+        <BrowserRouter>
+            <AuthProvider>
+                <MainLayout>
+                    <AppRoutes />
+                </MainLayout>
+            </AuthProvider>
+        </BrowserRouter>
     );
 }
 
