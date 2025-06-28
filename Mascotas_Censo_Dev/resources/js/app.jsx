@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './Routes';
 import MainLayout from './components/layout/MainLayout';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from '@context/AuthContext';
 import '../css/app.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';

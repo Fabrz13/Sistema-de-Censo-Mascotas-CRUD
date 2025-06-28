@@ -57,9 +57,9 @@ class PetController extends Controller
 
     public function update(Request $request, Pet $pet)
     {
-        \Log::debug('Headers recibidos:', $request->headers->all());
-        \Log::debug('Datos recibidos en update:', $request->except(['photo']));
-        \Log::debug('Archivo recibido:', ['has_file' => $request->hasFile('photo')]);
+        Log::debug('Headers recibidos:', $request->headers->all());
+        Log::debug('Datos recibidos en update:', $request->except(['photo']));
+        Log::debug('Archivo recibido:', ['has_file' => $request->hasFile('photo')]);
 
         // Validación manual para FormData
         $validated = $request->validate([
@@ -90,7 +90,7 @@ class PetController extends Controller
 
         $pet->update($validated);
         
-        \Log::debug('Mascota actualizada:', $pet->fresh()->toArray());
+        Log::debug('Mascota actualizada:', $pet->fresh()->toArray());
         return response()->json($pet->load('owner'));
     }
 

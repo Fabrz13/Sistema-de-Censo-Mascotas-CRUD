@@ -3,6 +3,7 @@ import PetList from './components/pets/PetList';
 import PetForm from './components/pets/PetForm';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import Profile from './components/profile/Profile';
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -14,6 +15,12 @@ export default function AppRoutes() {
         <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            <Route path="/profile" element={
+                <PrivateRoute>
+                    <Profile />
+                </PrivateRoute>
+            } />
             
             <Route path="/" element={
                 <PrivateRoute>

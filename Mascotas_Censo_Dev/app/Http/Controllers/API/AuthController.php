@@ -49,6 +49,13 @@ class AuthController extends Controller
             ]);
         }
 
+        // Verificar si la cuenta está deshabilitada
+        if ($owner->status === 'DESHABILITADO') {
+            throw ValidationException::withMessages([
+                'email' => ['Esta cuenta ha sido deshabilitada.'],
+            ]);
+        }
+
         return response()->json([
             'token' => $owner->createToken('auth_token')->plainTextToken,
             'owner' => $owner

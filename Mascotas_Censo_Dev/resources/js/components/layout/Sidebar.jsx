@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from '@context/AuthContext';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const Sidebar = ({ expanded, toggleSidebar }) => {
@@ -38,12 +38,12 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                 {currentUser && (
                     <>
                         <div className="mb-3">
-                            <img 
-                                src={currentUser.photo_url || '/storage/pets/user.avif'}
-                                alt="User profile" 
-                                className="rounded-circle"
-                                style={{ width: expanded ? '80px' : '40px', height: expanded ? '80px' : '40px', objectFit: 'cover' }}
-                            />
+                        <img 
+                            src={`/storage/${currentUser.photo_path}` || '/storage/pets/user.avif'}
+                            alt="User profile" 
+                            className="rounded-circle"
+                            style={{ width: expanded ? '80px' : '40px', height: expanded ? '80px' : '40px', objectFit: 'cover' }}
+                        />
                         </div>
                         {expanded && (
                             <h6 className="m-0">{currentUser.name}</h6>
@@ -53,6 +53,12 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
             </div>
 
             <ul className="nav flex-column px-2">
+                                <li className="nav-item">
+                    <Link to="/profile" className="nav-link text-white d-flex align-items-center">
+                        <i className="bi bi-person me-2"></i>
+                        {expanded && 'Mi Perfil'}
+                    </Link>
+                </li>
                 <li className="nav-item">
                     <Link to="/" className="nav-link text-white d-flex align-items-center">
                         <i className="bi bi-list-ul me-2"></i>
