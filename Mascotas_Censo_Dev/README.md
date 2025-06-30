@@ -1,66 +1,99 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+🐾 API de Gestión de Mascotas y Dueños 🏡
+<p align="center"> <strong>Una API RESTful construida con Laravel 10 y MySQL para el censo y gestión de mascotas y sus dueños</strong> </p><p align="center"> <img src="https://img.shields.io/badge/Laravel-10.x-red?style=flat&logo=laravel" alt="Laravel"> <img src="https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat&logo=php"> <img src="https://img.shields.io/badge/MySQL-8.0+-orange?style=flat&logo=mysql"> <img src="https://img.shields.io/badge/Sanctum-Auth-purple?style=flat"> <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat"> </p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+🚀 Requisitos Previos
+✅ PHP 8.1 o superior
 
-## About Laravel
+✅ Composer 2.x
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+✅ MySQL 8.0 o MariaDB 10.5+
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+✅ Laravel 10.x
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+✅ Node.js 16+ (para frontend opcional)
 
-## Learning Laravel
+⚙️ Instalación
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# 1. Clona el repositorio
+git clone [url-del-repositorio]
+cd censo-mascotas-api
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# 2. Instala dependencias
+composer install
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 3. Configura el entorno
+cp .env.example .env
 
-## Laravel Sponsors
+✍️ Edita el archivo .env con tus credenciales:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=censo_mascotas
+DB_USERNAME=tu_usuario
+DB_PASSWORD=tu_contraseña
 
-### Premium Partners
+APP_URL=http://localhost:8000
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+# 4. Genera la clave de aplicación
+php artisan key:generate
 
-## Contributing
+# 5. Configura Sanctum para autenticación
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 6. Ejecuta migraciones y seeders
+php artisan migrate --seed
 
-## Code of Conduct
+# 7. Crea enlace simbólico para almacenamiento
+php artisan storage:link
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 8. Inicia el servidor
+php artisan serve
 
-## Security Vulnerabilities
+🌐 La API estará disponible en:
+http://localhost:8000/api
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+🔗 Endpoints Principales
+🔐 Autenticación
+Método	Endpoint	Descripción
+POST	/api/register	Registrar nuevo dueño
+POST	/api/login	Iniciar sesión
+POST	/api/logout	Cerrar sesión (requiere token)
 
-## License
+🧑 Dueños
+Método	Endpoint	Descripción
+GET	/api/owner	Obtener dueño actual (autenticado)
+GET	/api/owners	Listar todos los dueños (admin)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+🐶 Mascotas
+Método	Endpoint	Descripción
+GET	/api/pets	Listar todas las mascotas
+POST	/api/pets	Crear nueva mascota (requiere token)
+GET	/api/pets/{id}	Mostrar mascota específica
+PUT	/api/pets/{id}	Actualizar mascota (requiere token)
+DELETE	/api/pets/{id}	Deshabilitar mascota (requiere token)
+
+👤 Perfil
+Método	Endpoint	Descripción
+GET	/api/profile	Obtener perfil (requiere token)
+PUT	/api/profile	Actualizar perfil (requiere token)
+POST	/api/profile/disable	Deshabilitar cuenta (requiere token)
+
+🛠️ Características Especiales
+
+Autenticación JWT con Sanctum - Seguridad robusta para todas las operaciones
+
+Eliminación lógica - Los registros se marcan como "DESHABILITADO" en lugar de borrarse
+
+Subida de imágenes - Soporte para fotos de perfil y de mascotas
+
+Reportes - Sistema de reportes de vacunación
+
+Relaciones completas - Dueños pueden tener múltiples mascotas
+
+Validaciones - Estrictas validaciones en todos los endpoints
+
+🧑‍💻 Autor
+Desarrollado por Fabrizio Castro
+📧 fabriziocastros2003@gmail.com
+🔗 Fabrz13
