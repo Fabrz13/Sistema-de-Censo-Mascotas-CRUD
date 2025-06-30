@@ -1,16 +1,27 @@
 🐾 API de Gestión de Mascotas y Dueños 🏡
-<p align="center"> <strong>Una API RESTful construida con Laravel 10 y MySQL para el censo y gestión de mascotas y sus dueños</strong> </p><p align="center"> <img src="https://img.shields.io/badge/Laravel-10.x-red?style=flat&logo=laravel" alt="Laravel"> <img src="https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat&logo=php"> <img src="https://img.shields.io/badge/MySQL-8.0+-orange?style=flat&logo=mysql"> <img src="https://img.shields.io/badge/Sanctum-Auth-purple?style=flat"> <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat"> </p>
+<p align="center"> 
+  <strong>Una API RESTful construida con Laravel 10 y MySQL para el censo y gestión de mascotas y sus dueños</strong> 
+</p>
+
+<p align="center"> 
+  <img src="https://img.shields.io/badge/Laravel-10.x-red?style=flat&logo=laravel" alt="Laravel"> 
+  <img src="https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat&logo=php"> 
+  <img src="https://img.shields.io/badge/MySQL-8.0+-orange?style=flat&logo=mysql"> 
+  <img src="https://img.shields.io/badge/Sanctum-Auth-purple?style=flat"> 
+  <img src="https://img.shields.io/badge/React-18-blue?style=flat&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat"> 
+</p>
 
 🚀 Requisitos Previos
 ✅ PHP 8.1 o superior
 
 ✅ Composer 2.x
 
-✅ MySQL 8.0 o MariaDB 10.5+
+✅ MySQL 8.0 
 
 ✅ Laravel 10.x
 
-✅ Node.js 16+ (para frontend opcional)
+✅ React 18.x + Vite 
 
 ⚙️ Instalación
 
