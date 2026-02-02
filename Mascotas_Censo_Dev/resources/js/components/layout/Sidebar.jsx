@@ -8,6 +8,20 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
+    const roleLabels = {
+    superadmin: 'Super Administrador',
+    veterinario: 'Veterinario'
+    };
+
+    const mascotasLabelByRole = {
+    cliente: 'Mis Mascotas',
+    veterinario: 'Mis Pacientes',
+    superadmin: 'Lista de Mascotas'
+    };
+
+    const mascotasLabel =
+    mascotasLabelByRole[currentUser?.role] || 'Lista de Mascotas';
+
     const handleLogout = async () => {
         try {
             await api.logout();
@@ -38,16 +52,37 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                 {currentUser && (
                     <>
                         <div className="mb-3">
-                        <img 
-                            src={currentUser?.photo_path ? `/storage/${currentUser.photo_path}` : '/storage/app/public/user.png'}
-                            alt="User profile" 
+                            <img
+                            src={
+                                currentUser?.photo_path
+                                ? `/storage/${currentUser.photo_path}`
+                                : '/storage/user.png'
+                            }
+                            onError={(e) => {
+                                e.target.src = '/storage/user.png';
+                            }}
+                            alt="User profile"
                             className="rounded-circle"
-                            style={{ width: expanded ? '80px' : '40px', height: expanded ? '80px' : '40px', objectFit: 'cover' }}
-                        />
+                            style={{
+                                width: expanded ? '80px' : '40px',
+                                height: expanded ? '80px' : '40px',
+                                objectFit: 'cover'
+                            }}
+                            />
                         </div>
                         {expanded && (
-                            <h6 className="m-0">{currentUser.name}</h6>
+                            <>
+                                <h6 className="m-0">{currentUser.name}</h6>
+
+                                {(currentUser.role === 'superadmin' || currentUser.role === 'veterinario') && (
+                                    <small className="text-light opacity-75">
+                                        <i className="bi bi-shield-check me-1"></i>
+                                        {roleLabels[currentUser.role]}
+                                    </small>
+                                )}
+                            </>
                         )}
+
                     </>
                 )}
             </div>
@@ -59,16 +94,21 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                         {expanded && 'Mi Perfil'}
                     </Link>
                 </li>
-                                <li className="nav-item">
-                    <Link to="/medical-consultations/schedule" className="nav-link text-white d-flex align-items-center">
-                        <i className="bi bi-calendar-plus me-2"></i>
-                        {expanded && 'Agendar cita médica'}
-                    </Link>
-                </li>
+                {currentUser?.role !== 'veterinario' && (
+                    <li className="nav-item">
+                        <Link
+                            to="/medical-consultations/schedule"
+                            className="nav-link text-white d-flex align-items-center"
+                        >
+                            <i className="bi bi-calendar-plus me-2"></i>
+                            {expanded && 'Agendar cita médica'}
+                        </Link>
+                    </li>
+                )}
                 <li className="nav-item">
                     <Link to="/" className="nav-link text-white d-flex align-items-center">
                         <i className="bi bi-list-ul me-2"></i>
-                        {expanded && 'Lista de Mascotas'}
+                        {expanded && mascotasLabel}
                     </Link>
                 </li>
                 {/* Puedes agregar más opciones aquí */}
