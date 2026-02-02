@@ -12,16 +12,34 @@ class PetController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum')->except(['index', 'show']);
+        // ✅ Ahora todas las rutas requieren auth (porque el acceso depende del rol)
+        $this->middleware('auth:sanctum');
+
+        // ✅ Con esto, Laravel aplica PetPolicy automáticamente a index/show/store/update/destroy
+        $this->authorizeResource(Pet::class, 'pet');
     }
-    
-    public function index()
+
+    public function index(Request $request)
     {
-        return Pet::with('owner')->active()->get();
+        $user = $request->user();
+
+        $query = Pet::with('owner')->active();
+
+        // ✅ Cliente: solo sus mascotas
+        if ($user->isCliente()) {
+            $query->where('owner_id', $user->id);
+        }
+
+        // ✅ Superadmin: todas (sin filtro)
+        // ✅ Veterinario: por ahora todas; en paso 3 se restringe por atenciones/consultas
+
+        return $query->get();
     }
 
     public function store(Request $request)
     {
+        // authorize() ya lo cubre authorizeResource -> create
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'species' => 'required|in:perro,gato,otro',
@@ -34,8 +52,9 @@ class PetController extends Controller
             'last_vaccination' => 'nullable|date',
         ]);
 
+        // ✅ Forzar dueño autenticado (cliente crea para sí mismo)
+        // Si más adelante superadmin/veterinario pueden crear para terceros, lo habilitamos con roles + validación.
         $validated['owner_id'] = $request->user()->id;
-
         $validated['status'] = 'HABILITADO';
 
         if ($request->hasFile('photo')) {
@@ -49,21 +68,18 @@ class PetController extends Controller
 
     public function show(Pet $pet)
     {
+        // authorize() ya lo cubre authorizeResource -> view
         return $pet->load('owner');
     }
 
     public function update(Request $request, Pet $pet)
     {
-        // Seguridad: un usuario solo puede editar sus propias mascotas.
-        if ($pet->owner_id !== $request->user()->id) {
-            return response()->json(['message' => 'No autorizado para modificar esta mascota'], 403);
-        }
+        // authorize() ya lo cubre authorizeResource -> update
 
         Log::debug('Headers recibidos:', $request->headers->all());
         Log::debug('Datos recibidos en update:', $request->except(['photo']));
         Log::debug('Archivo recibido:', ['has_file' => $request->hasFile('photo')]);
 
-        // Validación manual para FormData
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'species' => 'required|in:perro,gato,otro',
@@ -76,12 +92,10 @@ class PetController extends Controller
             'last_vaccination' => 'nullable|date',
         ]);
 
-        // Convertir vaccinated a booleano
         if (is_string($validated['vaccinated'])) {
             $validated['vaccinated'] = $validated['vaccinated'] === '1' || $validated['vaccinated'] === 'true';
         }
 
-        // Manejo de la foto
         if ($request->hasFile('photo')) {
             if ($pet->photo_path) {
                 Storage::disk('public')->delete($pet->photo_path);
@@ -89,20 +103,19 @@ class PetController extends Controller
             $validated['photo_path'] = $request->file('photo')->store('pets', 'public');
         }
 
-        // Forzar dueño autenticado (evita reasignación)
+        // ✅ Evitar reasignación de dueño desde el cliente
         $validated['owner_id'] = $request->user()->id;
 
         $pet->update($validated);
-        
+
         Log::debug('Mascota actualizada:', $pet->fresh()->toArray());
+
         return response()->json($pet->load('owner'));
     }
 
     public function destroy(Pet $pet)
     {
-        if ($pet->owner_id !== request()->user()->id) {
-            return response()->json(['message' => 'No autorizado para deshabilitar esta mascota'], 403);
-        }
+        // authorize() ya lo cubre authorizeResource -> delete
 
         $pet->update(['status' => 'DESHABILITADO']);
 

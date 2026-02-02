@@ -2,24 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Storage;
 
 class Owner extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
+
+    public const ROLE_CLIENTE = 'cliente';
+    public const ROLE_VETERINARIO = 'veterinario';
+    public const ROLE_SUPERADMIN = 'superadmin';
+
+    protected $table = 'owners';
 
     protected $fillable = [
-        'name', 
-        'address', 
-        'phone',
+        'name',
         'email',
         'password',
+        'address',
+        'phone',
         'photo_path',
         'location',
-        'status'
+        'status',
+        'role', 
     ];
 
     protected $hidden = [
@@ -28,21 +35,29 @@ class Owner extends Authenticatable
     ];
 
     protected $casts = [
+        'email_verified_at' => 'datetime',
         'location' => 'array',
     ];
 
+    // Relación actual: un cliente tiene muchas mascotas
     public function pets()
     {
-        return $this->hasMany(Pet::class);
+        return $this->hasMany(Pet::class, 'owner_id');
     }
 
-    public function getPhotoUrlAttribute()
+    // Helpers de rol
+    public function isCliente(): bool
     {
-        return $this->photo_path ? Storage::url($this->photo_path) : null;
+        return $this->role === self::ROLE_CLIENTE;
     }
 
-    public function scopeActive($query)
+    public function isVeterinario(): bool
     {
-        return $query->where('status', 'HABILITADO');
+        return $this->role === self::ROLE_VETERINARIO;
+    }
+
+    public function isSuperadmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
     }
 }
