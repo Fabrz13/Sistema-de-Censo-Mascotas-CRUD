@@ -36,9 +36,9 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
         <div className={`sidebar bg-dark text-white ${expanded ? 'expanded' : 'collapsed'}`}>
             <div className="sidebar-header d-flex justify-content-between align-items-center p-3">
                 {expanded ? (
-                    <h4 className="m-0">Pet Health</h4>
+                    <h4 className="m-0">Vet Lomas</h4>
                 ) : (
-                    <h4 className="m-0">PH</h4>
+                    <h4 className="m-0">VL</h4>
                 )}
                 <button 
                     onClick={toggleSidebar}
