@@ -5,6 +5,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './components/profile/Profile';
 import ScheduleMedicalConsultation from "./components/consultations/ScheduleMedicalConsultation";
+import MedicalConsultationList from "./components/consultations/MedicalConsultationList";
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -32,6 +33,12 @@ export default function AppRoutes() {
             <Route path="/medical-consultations/schedule" element={
                 <PrivateRoute>
                     <ScheduleMedicalConsultation />
+                </PrivateRoute>
+            } />
+
+            <Route path="/medical-consultations" element={
+                <PrivateRoute>
+                    <MedicalConsultationList />
                 </PrivateRoute>
             } />
 

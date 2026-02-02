@@ -96,5 +96,11 @@ export default {
     createMedicalConsultation(payload) {
         return api.post('/medical-consultations', payload);
     },
+    getMedicalConsultations() {
+        return api.get('/medical-consultations');
+    },
+    updateMedicalConsultationStatus(id, status) {
+        return api.patch(`/medical-consultations/${id}/status`, { status });
+    },
 
 };

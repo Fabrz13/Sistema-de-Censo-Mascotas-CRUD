@@ -22,7 +22,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/disable', [ProfileController::class, 'disableAccount']);
 
-    // ✅ Agendar cita
+    // Agendar cita
     Route::get('/veterinarians', [VeterinarianController::class, 'index']);
     Route::post('/medical-consultations', [MedicalConsultationController::class, 'store']);
+
+    Route::get('/medical-consultations', [MedicalConsultationController::class, 'index']);
+
+    Route::patch('/medical-consultations/{medicalConsultation}/status', [MedicalConsultationController::class, 'updateStatus']);
 });

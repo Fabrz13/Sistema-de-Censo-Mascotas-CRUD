@@ -88,7 +88,7 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
             </div>
 
             <ul className="nav flex-column px-2">
-                                <li className="nav-item">
+                <li className="nav-item">
                     <Link to="/profile" className="nav-link text-white d-flex align-items-center">
                         <i className="bi bi-person me-2"></i>
                         {expanded && 'Mi Perfil'}
@@ -105,6 +105,12 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                         </Link>
                     </li>
                 )}
+                <li className="nav-item">
+                <Link to="/medical-consultations" className="nav-link text-white d-flex align-items-center">
+                    <i className="bi bi-clipboard2-pulse me-2"></i>
+                    {expanded && (currentUser?.role === 'superadmin' ? 'Citas Veterinarias' : 'Mis Citas')}
+                </Link>
+                </li>
                 <li className="nav-item">
                     <Link to="/" className="nav-link text-white d-flex align-items-center">
                         <i className="bi bi-list-ul me-2"></i>

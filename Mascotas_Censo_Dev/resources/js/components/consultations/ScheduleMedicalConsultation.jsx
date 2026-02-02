@@ -25,7 +25,6 @@ export default function ScheduleMedicalConsultation() {
   useEffect(() => {
     const load = async () => {
       try {
-        // pets viene filtrado por rol (cliente solo sus mascotas; vet solo atendidas; superadmin todas)
         const petsRes = await api.getPets();
         setPets(petsRes.data);
 
@@ -69,8 +68,8 @@ export default function ScheduleMedicalConsultation() {
         notes: notes || null
       });
 
-      alert("✅ Consulta médica creada correctamente.");
-      navigate("/");
+      // ✅ CAMBIO: redirigir a "Mis Citas" automáticamente
+      navigate("/medical-consultations");
 
     } catch (err) {
       console.error(err);
@@ -90,7 +89,6 @@ export default function ScheduleMedicalConsultation() {
         </div>
 
         <div className="card-body">
-          {/* Paso 1 */}
           {step === 1 && (
             <>
               <h5 className="mb-3">Paso 1: Selecciona una mascota</h5>
@@ -130,7 +128,6 @@ export default function ScheduleMedicalConsultation() {
             </>
           )}
 
-          {/* Paso 2 */}
           {step === 2 && (
             <form onSubmit={handleCreate}>
               <h5 className="mb-3">Paso 2: Datos para la cita</h5>

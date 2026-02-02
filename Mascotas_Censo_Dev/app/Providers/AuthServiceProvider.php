@@ -3,18 +3,16 @@
 namespace App\Providers;
 
 use App\Models\Pet;
+use App\Models\MedicalConsultation;
 use App\Policies\PetPolicy;
+use App\Policies\MedicalConsultationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
         Pet::class => PetPolicy::class,
+        MedicalConsultation::class => MedicalConsultationPolicy::class,
     ];
 
     public function boot(): void
