@@ -245,7 +245,7 @@ function Profile() {
                                                 <p><strong>Teléfono:</strong> {currentUser.phone}</p>
                                             </div>
                                             <div className="col-md-6">
-                                                <p><strong>Estado:</strong> 
+                                                <p><strong>Estado: </strong> 
                                                     <span className={`badge ${currentUser.status === 'HABILITADO' ? 'bg-success' : 'bg-danger'}`}>
                                                         {currentUser.status}
                                                     </span>

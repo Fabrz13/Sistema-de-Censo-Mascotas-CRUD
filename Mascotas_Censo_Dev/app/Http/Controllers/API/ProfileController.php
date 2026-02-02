@@ -53,10 +53,11 @@ class ProfileController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error al actualizar perfil: ' . $e->getMessage());
-        return response()->json([
-            'message' => 'Perfil actualizado correctamente',
-            'user' => $user->fresh() // Esto devuelve el usuario actualizado
-        ], 500);
+
+            return response()->json([
+                'message' => 'Error al actualizar el perfil',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
     }
 

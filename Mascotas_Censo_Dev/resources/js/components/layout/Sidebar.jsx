@@ -39,7 +39,7 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                     <>
                         <div className="mb-3">
                         <img 
-                            src={`/storage/${currentUser.photo_path}` || '/storage/pets/user.avif'}
+                            src={currentUser?.photo_path ? `/storage/${currentUser.photo_path}` : '/storage/pets/user.avif'}
                             alt="User profile" 
                             className="rounded-circle"
                             style={{ width: expanded ? '80px' : '40px', height: expanded ? '80px' : '40px', objectFit: 'cover' }}

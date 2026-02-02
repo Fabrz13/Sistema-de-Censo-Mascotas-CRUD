@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../../services/api';
@@ -8,7 +7,6 @@ function PetForm() {
     const location = useLocation();
     const navigate = useNavigate();
     
-    // Determinar el modo de visualización basado en la ruta
     const isViewMode = location.pathname.endsWith(`/pets/${id}`) && !location.pathname.includes('/edit');
     const isEditMode = location.pathname.includes('/edit');
     
@@ -26,24 +24,18 @@ function PetForm() {
         owner_id: '',
         status: 'HABILITADO'
     });
-    const [owners, setOwners] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [currentOwner, ownersList] = await Promise.all([
-                    api.getCurrentOwner(),
-                    api.getOwners()
-                ]);
-
-                setOwners(ownersList.data);
+                const currentOwner = await api.getCurrentOwner();
                 
                 if (id) {
                     const petResponse = await api.getPet(id);
                     setFormData({
                         ...petResponse.data,
                         last_vaccination: petResponse.data.last_vaccination?.split('T')[0] || '',
-                        owner_id: petResponse.data.owner_id || currentOwner.data.id
+                        owner_id: currentOwner.data.id
                     });
                 } else {
                     setFormData(prev => ({
@@ -96,7 +88,6 @@ function PetForm() {
             formDataToSend.append('vaccinated', formData.vaccinated ? '1' : '0');
             formDataToSend.append('food_type', formData.food_type);
             formDataToSend.append('last_vaccination', formData.last_vaccination);
-            formDataToSend.append('owner_id', formData.owner_id);
 
             // Manejar la foto
             if (formData.photo && formData.photo instanceof File) {
@@ -234,25 +225,7 @@ function PetForm() {
                                     </div>
                                 </div>
 
-                                {id && (
-                                    <div className="form-group mb-3">
-                                        <label>Dueño</label>
-                                        <select
-                                            className="form-control"
-                                            name="owner_id"
-                                            value={formData.owner_id}
-                                            onChange={handleChange}
-                                            required
-                                            readOnly={isViewMode}
-                                        >
-                                            {owners.map(owner => (
-                                                <option key={owner.id} value={owner.id}>
-                                                    {owner.name} ({owner.email || owner.phone})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
+                                {/* Dueño no editable en modo cliente */}
 
                                 <div className="row">
                                     <div className="col-md-6">
@@ -355,4 +328,4 @@ function PetForm() {
     );
 }
 
-export default PetForm;     
+export default PetForm;

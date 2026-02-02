@@ -32,12 +32,9 @@ class PetController extends Controller
             'food_type' => 'required|string',
             'photo' => 'nullable|image|max:2048',
             'last_vaccination' => 'nullable|date',
-            'owner_id' => 'sometimes|required|exists:owners,id'
         ]);
 
-        if (!isset($validated['owner_id'])) {
-            $validated['owner_id'] = $request->user()->id;
-        }
+        $validated['owner_id'] = $request->user()->id;
 
         $validated['status'] = 'HABILITADO';
 
@@ -57,6 +54,11 @@ class PetController extends Controller
 
     public function update(Request $request, Pet $pet)
     {
+        // Seguridad: un usuario solo puede editar sus propias mascotas.
+        if ($pet->owner_id !== $request->user()->id) {
+            return response()->json(['message' => 'No autorizado para modificar esta mascota'], 403);
+        }
+
         Log::debug('Headers recibidos:', $request->headers->all());
         Log::debug('Datos recibidos en update:', $request->except(['photo']));
         Log::debug('Archivo recibido:', ['has_file' => $request->hasFile('photo')]);
@@ -72,7 +74,6 @@ class PetController extends Controller
             'food_type' => 'required|string',
             'photo' => 'nullable|image|max:2048',
             'last_vaccination' => 'nullable|date',
-            'owner_id' => 'required|exists:owners,id'
         ]);
 
         // Convertir vaccinated a booleano
@@ -88,6 +89,9 @@ class PetController extends Controller
             $validated['photo_path'] = $request->file('photo')->store('pets', 'public');
         }
 
+        // Forzar dueño autenticado (evita reasignación)
+        $validated['owner_id'] = $request->user()->id;
+
         $pet->update($validated);
         
         Log::debug('Mascota actualizada:', $pet->fresh()->toArray());
@@ -96,7 +100,10 @@ class PetController extends Controller
 
     public function destroy(Pet $pet)
     {
-        // Cambiar estado en lugar de eliminar
+        if ($pet->owner_id !== request()->user()->id) {
+            return response()->json(['message' => 'No autorizado para deshabilitar esta mascota'], 403);
+        }
+
         $pet->update(['status' => 'DESHABILITADO']);
 
         return response()->json(['message' => 'Mascota deshabilitada correctamente']);

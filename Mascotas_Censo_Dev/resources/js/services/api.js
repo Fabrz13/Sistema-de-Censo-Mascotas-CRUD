@@ -50,11 +50,8 @@ export default {
         return api.get('/pets/vaccination-report', { params });
     },
     
-    // Métodos para dueños
-    getOwners() {
-        return api.get('/owners');
-    },
-    getCurrentOwner() {  // Este es el método que falta o está mal nombrado
+    // Métodos para usuario autenticado
+    getCurrentOwner() {
         return api.get('/owner');
     },
 
