@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 
+// ✅ CAMBIO: importar useAuth para leer rol del usuario actual
+import { useAuth } from '@context/AuthContext';
+
 function PetForm() {
     const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // ✅ CAMBIO: detectar si el usuario es veterinario
+    const { currentUser } = useAuth();
+    const isVeterinario = currentUser?.role === 'veterinario';
     
     const isViewMode = location.pathname.endsWith(`/pets/${id}`) && !location.pathname.includes('/edit');
     const isEditMode = location.pathname.includes('/edit');
@@ -55,7 +62,9 @@ function PetForm() {
     }, [id, navigate]);
 
     const handleChange = (e) => {
-        if (isViewMode) return;
+        // ✅ CAMBIO: veterinario NO puede editar
+        if (isViewMode || isVeterinario) return;
+
         const { name, value, type, checked } = e.target;
         setFormData({
             ...formData,
@@ -64,7 +73,9 @@ function PetForm() {
     };
 
     const handleFileChange = (e) => {
-        if (isViewMode) return;
+        // ✅ CAMBIO: veterinario NO puede cambiar foto
+        if (isViewMode || isVeterinario) return;
+
         setFormData({
             ...formData,
             photo: e.target.files[0]
@@ -72,14 +83,15 @@ function PetForm() {
     };
 
     const handleSubmit = async (e) => {
-        if (isViewMode) return;
+        // ✅ CAMBIO: veterinario NO puede guardar
+        if (isViewMode || isVeterinario) return;
+
         e.preventDefault();
         setLoading(true);
 
         try {
             const formDataToSend = new FormData();
             
-            // Solo campos editables
             formDataToSend.append('name', formData.name);
             formDataToSend.append('species', formData.species);
             formDataToSend.append('breed', formData.breed);
@@ -89,22 +101,18 @@ function PetForm() {
             formDataToSend.append('food_type', formData.food_type);
             formDataToSend.append('last_vaccination', formData.last_vaccination);
 
-            // Manejar la foto
             if (formData.photo && formData.photo instanceof File) {
                 formDataToSend.append('photo', formData.photo);
             }
 
-            // Debug: Verificar contenido de FormData
             for (let [key, value] of formDataToSend.entries()) {
                 console.log(`FormData: ${key} =`, value);
             }
 
             if (id) {
-            // Actualización - Usar PUT
-            formDataToSend.append('_method', 'PUT');
-            await api.updatePet(id, formDataToSend);
+                formDataToSend.append('_method', 'PUT');
+                await api.updatePet(id, formDataToSend);
             } else {
-                // Creación - Usar POST
                 await api.createPet(formDataToSend);
             }
 
@@ -118,6 +126,9 @@ function PetForm() {
     };
 
     const handleDelete = async () => {
+        // ✅ CAMBIO: veterinario NO puede deshabilitar
+        if (isVeterinario) return;
+
         if (window.confirm('¿Estás seguro de deshabilitar esta mascota?')) {
             try {
                 await api.deletePet(id);
@@ -131,6 +142,9 @@ function PetForm() {
 
     if (loading) return <div className="text-center mt-5">Cargando formulario...</div>;
 
+    // ✅ CAMBIO: en modo veterinario, forzamos "solo lectura"
+    const readOnlyFields = isViewMode || isVeterinario;
+
     return (
         <div className="container mt-4">
             <div className="row justify-content-center">
@@ -138,7 +152,12 @@ function PetForm() {
                     <div className="card">
                         <div className="card-header bg-primary text-white">
                             <h3 className="mb-0">
-                                {isViewMode ? 'Detalles de Mascota' : isEditMode ? 'Editar Mascota' : 'Registrar Nueva Mascota'}
+                                {isViewMode || isVeterinario
+                                    ? 'Detalles de Mascota'
+                                    : isEditMode
+                                        ? 'Editar Mascota'
+                                        : 'Registrar Nueva Mascota'
+                                }
                             </h3>
                         </div>
                         <div className="card-body">
@@ -152,7 +171,7 @@ function PetForm() {
                                         value={formData.name}
                                         onChange={handleChange}
                                         required
-                                        readOnly={isViewMode}
+                                        readOnly={readOnlyFields}
                                     />
                                 </div>
 
@@ -166,7 +185,7 @@ function PetForm() {
                                                 value={formData.species}
                                                 onChange={handleChange}
                                                 required
-                                                readOnly={isViewMode}
+                                                disabled={readOnlyFields}
                                             >
                                                 <option value="perro">Perro</option>
                                                 <option value="gato">Gato</option>
@@ -184,7 +203,7 @@ function PetForm() {
                                                 value={formData.breed}
                                                 onChange={handleChange}
                                                 required
-                                                readOnly={isViewMode}
+                                                readOnly={readOnlyFields}
                                             />
                                         </div>
                                     </div>
@@ -200,7 +219,7 @@ function PetForm() {
                                                 value={formData.size}
                                                 onChange={handleChange}
                                                 required
-                                                readOnly={isViewMode}
+                                                disabled={readOnlyFields}
                                             >
                                                 <option value="pequeño">Pequeño</option>
                                                 <option value="mediano">Mediano</option>
@@ -219,13 +238,11 @@ function PetForm() {
                                                 onChange={handleChange}
                                                 min="0"
                                                 required
-                                                readOnly={isViewMode}
+                                                readOnly={readOnlyFields}
                                             />
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Dueño no editable en modo cliente */}
 
                                 <div className="row">
                                     <div className="col-md-6">
@@ -238,7 +255,7 @@ function PetForm() {
                                                 value={formData.food_type}
                                                 onChange={handleChange}
                                                 required
-                                                readOnly={isViewMode}
+                                                readOnly={readOnlyFields}
                                             />
                                         </div>
                                     </div>
@@ -251,7 +268,7 @@ function PetForm() {
                                                 name="last_vaccination"
                                                 value={formData.last_vaccination}
                                                 onChange={handleChange}
-                                                readOnly={isViewMode}
+                                                readOnly={readOnlyFields}
                                             />
                                         </div>
                                     </div>
@@ -265,32 +282,36 @@ function PetForm() {
                                         name="vaccinated"
                                         checked={formData.vaccinated}
                                         onChange={handleChange}
+                                        disabled={readOnlyFields}
                                     />
                                     <label className="form-check-label" htmlFor="vaccinated">Vacunado</label>
                                 </div>
 
                                 <div className="form-group mb-4">
                                     <label>Foto de la Mascota</label>
-                                    <input
-                                        type="file"
-                                        className="form-control"
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                    />
+
+                                    {!readOnlyFields && (
+                                        <input
+                                            type="file"
+                                            className="form-control"
+                                            onChange={handleFileChange}
+                                            accept="image/*"
+                                        />
+                                    )}
+
                                     {formData.photo_path && (
                                         <div className="mt-2">
-                                            <small>Foto actual:</small>
                                             <img 
                                                 src={`/storage/${formData.photo_path}`} 
                                                 alt="Foto actual" 
                                                 className="img-thumbnail mt-1" 
-                                                style={{maxHeight: '100px'}}
+                                                style={{ maxHeight: '100px' }}
                                             />
                                         </div>
                                     )}
                                 </div>
 
-                                 <div className="d-flex justify-content-end mt-4">
+                                <div className="d-flex justify-content-end mt-4">
                                     <button 
                                         type="button" 
                                         className="btn btn-secondary me-2" 
@@ -298,8 +319,9 @@ function PetForm() {
                                     >
                                         Volver
                                     </button>
-                                    
-                                    {!isViewMode && (
+
+                                    {/* ✅ CAMBIO: Veterinario NO ve Guardar */}
+                                    {!readOnlyFields && (
                                         <button 
                                             type="submit" 
                                             className="btn btn-primary me-2" 
@@ -308,8 +330,9 @@ function PetForm() {
                                             {loading ? 'Guardando...' : 'Guardar'}
                                         </button>
                                     )}
-                                    
-                                    {id && !isViewMode && (
+
+                                    {/* ✅ CAMBIO: Veterinario NO ve Deshabilitar */}
+                                    {id && !readOnlyFields && (
                                         <button 
                                             type="button" 
                                             className="btn btn-danger" 

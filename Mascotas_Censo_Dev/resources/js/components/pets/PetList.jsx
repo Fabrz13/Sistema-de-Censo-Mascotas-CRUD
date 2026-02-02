@@ -9,6 +9,9 @@ import {
 } from '@tanstack/react-table';
 import api from '../../services/api';
 
+// ✅ CAMBIO: importar useAuth para leer rol del usuario actual
+import { useAuth } from '@context/AuthContext';
+
 function PetList() {
     const [originalData, setOriginalData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,6 +21,23 @@ function PetList() {
         vaccinated: ''
     });
     const navigate = useNavigate();
+
+    // ✅ CAMBIO: detectar si el usuario es veterinario
+    const { currentUser } = useAuth();
+    const isVeterinario = currentUser?.role === 'veterinario';
+
+    const handleDelete = async (petId) => {
+        if (window.confirm('¿Estás seguro de deshabilitar esta mascota?')) {
+            try {
+                await api.deletePet(petId);
+                // Actualizar lista después de deshabilitar
+                const response = await api.getPets();
+                setOriginalData(response.data);
+            } catch (error) {
+                console.error('Error deleting pet:', error);
+            }
+        }
+    };
 
     // Columnas de la tabla (versión v8)
     const columns = useMemo(() => [
@@ -60,23 +80,30 @@ function PetList() {
             header: 'Acciones',
             cell: info => (
                 <div className="d-flex gap-2">
+                    {/* ✅ SIEMPRE: el botón de ver */}
                     <Link to={`/pets/${info.getValue()}`} className="btn btn-sm btn-info">
                         <i className="bi bi-eye"></i>
                     </Link>
-                    <Link to={`/pets/${info.getValue()}/edit`} className="btn btn-sm btn-warning">
-                        <i className="bi bi-pencil"></i>
-                    </Link>
-                    <button 
-                        onClick={() => handleDelete(info.getValue())} 
-                        className="btn btn-sm btn-danger"
-                    >
-                        <i className="bi bi-trash"></i>
-                    </button>
+
+                    {/* ✅ CAMBIO: Veterinario NO ve editar ni eliminar */}
+                    {!isVeterinario && (
+                        <>
+                            <Link to={`/pets/${info.getValue()}/edit`} className="btn btn-sm btn-warning">
+                                <i className="bi bi-pencil"></i>
+                            </Link>
+                            <button 
+                                onClick={() => handleDelete(info.getValue())} 
+                                className="btn btn-sm btn-danger"
+                            >
+                                <i className="bi bi-trash"></i>
+                            </button>
+                        </>
+                    )}
                 </div>
             ),
             enableSorting: false
         }
-    ], []);
+    ], [isVeterinario]);
 
     // Filtrar datos
     const filteredData = useMemo(() => {
@@ -121,19 +148,6 @@ function PetList() {
         fetchPets();
     }, []);
 
-    const handleDelete = async (petId) => {
-        if (window.confirm('¿Estás seguro de deshabilitar esta mascota?')) {
-            try {
-                await api.deletePet(petId);
-                // Actualizar lista después de deshabilitar
-                const response = await api.getPets();
-                setOriginalData(response.data);
-            } catch (error) {
-                console.error('Error deleting pet:', error);
-            }
-        }
-    };
-
     if (loading) return <div className="text-center py-5">Cargando mascotas...</div>;
 
     return (
@@ -141,10 +155,14 @@ function PetList() {
             {/* Barra superior con título y botones */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1>Sistema de Censo de Mascotas</h1>
+
+                {/* ✅ CAMBIO: Veterinario NO ve "Nueva Mascota" */}
                 <div>
-                    <Link to="/pets/new" className="btn btn-primary me-2">
-                        <i className="bi bi-plus-circle me-2"></i>Nueva Mascota
-                    </Link>
+                    {!isVeterinario && (
+                        <Link to="/pets/new" className="btn btn-primary me-2">
+                            <i className="bi bi-plus-circle me-2"></i>Nueva Mascota
+                        </Link>
+                    )}
                 </div>
             </div>
 

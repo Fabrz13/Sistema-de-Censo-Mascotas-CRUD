@@ -183,7 +183,6 @@ function Profile() {
                                         />
                                         {currentUser.photo_path && (
                                             <div className="mt-2">
-                                                <small>Foto actual:</small>
                                                 <img 
                                                     src={`/storage/${currentUser.photo_path}`} 
                                                     alt="Foto actual" 
