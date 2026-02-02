@@ -12,10 +12,7 @@ class PetController extends Controller
 {
     public function __construct()
     {
-        // ✅ Ahora todas las rutas requieren auth (porque el acceso depende del rol)
         $this->middleware('auth:sanctum');
-
-        // ✅ Con esto, Laravel aplica PetPolicy automáticamente a index/show/store/update/destroy
         $this->authorizeResource(Pet::class, 'pet');
     }
 
@@ -25,21 +22,23 @@ class PetController extends Controller
 
         $query = Pet::with('owner')->active();
 
-        // ✅ Cliente: solo sus mascotas
         if ($user->isCliente()) {
             $query->where('owner_id', $user->id);
         }
 
-        // ✅ Superadmin: todas (sin filtro)
-        // ✅ Veterinario: por ahora todas; en paso 3 se restringe por atenciones/consultas
+        if ($user->isVeterinario()) {
+            $query->whereHas('consultations', function ($q) use ($user) {
+                $q->where('veterinarian_id', $user->id);
+            });
+        }
+
+        // superadmin -> sin filtro
 
         return $query->get();
     }
 
     public function store(Request $request)
     {
-        // authorize() ya lo cubre authorizeResource -> create
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'species' => 'required|in:perro,gato,otro',
@@ -52,8 +51,6 @@ class PetController extends Controller
             'last_vaccination' => 'nullable|date',
         ]);
 
-        // ✅ Forzar dueño autenticado (cliente crea para sí mismo)
-        // Si más adelante superadmin/veterinario pueden crear para terceros, lo habilitamos con roles + validación.
         $validated['owner_id'] = $request->user()->id;
         $validated['status'] = 'HABILITADO';
 
@@ -68,14 +65,11 @@ class PetController extends Controller
 
     public function show(Pet $pet)
     {
-        // authorize() ya lo cubre authorizeResource -> view
         return $pet->load('owner');
     }
 
     public function update(Request $request, Pet $pet)
     {
-        // authorize() ya lo cubre authorizeResource -> update
-
         Log::debug('Headers recibidos:', $request->headers->all());
         Log::debug('Datos recibidos en update:', $request->except(['photo']));
         Log::debug('Archivo recibido:', ['has_file' => $request->hasFile('photo')]);
@@ -103,8 +97,8 @@ class PetController extends Controller
             $validated['photo_path'] = $request->file('photo')->store('pets', 'public');
         }
 
-        // ✅ Evitar reasignación de dueño desde el cliente
-        $validated['owner_id'] = $request->user()->id;
+        // Mantener dueño sin reasignación desde el cliente
+        $validated['owner_id'] = $pet->owner_id;
 
         $pet->update($validated);
 
@@ -115,10 +109,7 @@ class PetController extends Controller
 
     public function destroy(Pet $pet)
     {
-        // authorize() ya lo cubre authorizeResource -> delete
-
         $pet->update(['status' => 'DESHABILITADO']);
-
         return response()->json(['message' => 'Mascota deshabilitada correctamente']);
     }
 

@@ -26,7 +26,7 @@ class Owner extends Authenticatable
         'photo_path',
         'location',
         'status',
-        'role', 
+        'role',
     ];
 
     protected $hidden = [
@@ -39,13 +39,21 @@ class Owner extends Authenticatable
         'location' => 'array',
     ];
 
-    // Relación actual: un cliente tiene muchas mascotas
     public function pets()
     {
         return $this->hasMany(Pet::class, 'owner_id');
     }
 
-    // Helpers de rol
+    public function consultationsAsClient()
+    {
+        return $this->hasMany(MedicalConsultation::class, 'client_id');
+    }
+
+    public function consultationsAsVeterinarian()
+    {
+        return $this->hasMany(MedicalConsultation::class, 'veterinarian_id');
+    }
+
     public function isCliente(): bool
     {
         return $this->role === self::ROLE_CLIENTE;

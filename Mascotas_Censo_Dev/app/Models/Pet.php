@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Pet extends Model
 {
@@ -15,28 +14,28 @@ class Pet extends Model
         'species',
         'breed',
         'size',
-        'age',  
+        'age',
         'vaccinated',
         'food_type',
         'photo_path',
-        'last_vaccination',
         'owner_id',
-        'status'
+        'status',
+        'last_vaccination',
     ];
 
     protected $casts = [
         'vaccinated' => 'boolean',
-        'last_vaccination' => 'date'
+        'last_vaccination' => 'date',
     ];
 
     public function owner()
     {
-        return $this->belongsTo(Owner::class);
+        return $this->belongsTo(Owner::class, 'owner_id');
     }
 
-    public function getPhotoUrlAttribute()
+    public function consultations()
     {
-        return $this->photo_path ? Storage::url($this->photo_path) : null;
+        return $this->hasMany(MedicalConsultation::class, 'pet_id');
     }
 
     public function scopeActive($query)

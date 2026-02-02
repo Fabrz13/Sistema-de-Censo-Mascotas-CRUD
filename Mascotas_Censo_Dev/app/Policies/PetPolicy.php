@@ -7,60 +7,65 @@ use App\Models\Pet;
 
 class PetPolicy
 {
-    /**
-     * Ver listado de mascotas.
-     */
     public function viewAny(Owner $user): bool
     {
-        // Cliente: sí puede ver listado, pero filtrado por owner_id en el controller
+        // Cliente: puede ver listado (pero filtrado por owner_id en controller)
         if ($user->isCliente()) return true;
 
         // Superadmin: todo
         if ($user->isSuperadmin()) return true;
 
-        // Veterinario: temporalmente permitido (paso 3 lo restringimos por atenciones)
+        // Veterinario: sí, pero filtrado por consultas en controller
         if ($user->isVeterinario()) return true;
 
         return false;
     }
 
-    /**
-     * Ver una mascota específica.
-     */
     public function view(Owner $user, Pet $pet): bool
     {
         if ($user->isSuperadmin()) return true;
-        if ($user->isVeterinario()) return true; // paso 3 lo afinamos
-        return $pet->owner_id === $user->id; // cliente
-    }
 
-    /**
-     * Crear mascota.
-     */
-    public function create(Owner $user): bool
-    {
-        if ($user->isSuperadmin()) return true;
-        if ($user->isVeterinario()) return true; // opcional: puede registrar mascotas
-        return $user->isCliente();
-    }
+        if ($user->isVeterinario()) {
+            // ✅ Solo si hay una consulta asignada a este veterinario para esta mascota
+            return $pet->consultations()->where('veterinarian_id', $user->id)->exists();
+        }
 
-    /**
-     * Actualizar mascota.
-     */
-    public function update(Owner $user, Pet $pet): bool
-    {
-        if ($user->isSuperadmin()) return true;
-        if ($user->isVeterinario()) return true; // paso 3 lo afinamos
+        // Cliente
         return $pet->owner_id === $user->id;
     }
 
-    /**
-     * Deshabilitar mascota (destroy).
-     */
+    public function create(Owner $user): bool
+    {
+        // Cliente puede crear sus mascotas
+        if ($user->isCliente()) return true;
+
+        // Superadmin puede todo
+        if ($user->isSuperadmin()) return true;
+
+        // Veterinario: si quieres permitir que registre mascotas, déjalo true.
+        // Si NO, cámbialo a false.
+        return $user->isVeterinario();
+    }
+
+    public function update(Owner $user, Pet $pet): bool
+    {
+        if ($user->isSuperadmin()) return true;
+
+        if ($user->isVeterinario()) {
+            return $pet->consultations()->where('veterinarian_id', $user->id)->exists();
+        }
+
+        return $pet->owner_id === $user->id;
+    }
+
     public function delete(Owner $user, Pet $pet): bool
     {
         if ($user->isSuperadmin()) return true;
-        if ($user->isVeterinario()) return true; // paso 3 lo afinamos
+
+        if ($user->isVeterinario()) {
+            return $pet->consultations()->where('veterinarian_id', $user->id)->exists();
+        }
+
         return $pet->owner_id === $user->id;
     }
 }

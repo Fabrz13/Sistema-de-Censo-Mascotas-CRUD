@@ -89,4 +89,12 @@ export default {
             }
         });
     },
+    getVeterinarians() {
+        return api.get('/veterinarians');
+    },
+
+    createMedicalConsultation(payload) {
+        return api.post('/medical-consultations', payload);
+    },
+
 };

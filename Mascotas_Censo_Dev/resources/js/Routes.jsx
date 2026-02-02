@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import PetList from './components/pets/PetList';
 import PetForm from './components/pets/PetForm';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Profile from './components/profile/Profile';
+import ScheduleMedicalConsultation from "./components/consultations/ScheduleMedicalConsultation";
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -21,13 +22,19 @@ export default function AppRoutes() {
                     <Profile />
                 </PrivateRoute>
             } />
-            
+
             <Route path="/" element={
                 <PrivateRoute>
                     <PetList />
                 </PrivateRoute>
             } />
-            
+
+            <Route path="/medical-consultations/schedule" element={
+                <PrivateRoute>
+                    <ScheduleMedicalConsultation />
+                </PrivateRoute>
+            } />
+
             <Route path="/pets/new" element={
                 <PrivateRoute>
                     <PetForm />

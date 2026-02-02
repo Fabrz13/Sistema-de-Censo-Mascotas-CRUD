@@ -39,7 +39,7 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                     <>
                         <div className="mb-3">
                         <img 
-                            src={currentUser?.photo_path ? `/storage/${currentUser.photo_path}` : '/storage/pets/user.avif'}
+                            src={currentUser?.photo_path ? `/storage/${currentUser.photo_path}` : '/storage/app/public/user.png'}
                             alt="User profile" 
                             className="rounded-circle"
                             style={{ width: expanded ? '80px' : '40px', height: expanded ? '80px' : '40px', objectFit: 'cover' }}
@@ -57,6 +57,12 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                     <Link to="/profile" className="nav-link text-white d-flex align-items-center">
                         <i className="bi bi-person me-2"></i>
                         {expanded && 'Mi Perfil'}
+                    </Link>
+                </li>
+                                <li className="nav-item">
+                    <Link to="/medical-consultations/schedule" className="nav-link text-white d-flex align-items-center">
+                        <i className="bi bi-calendar-plus me-2"></i>
+                        {expanded && 'Agendar cita médica'}
                     </Link>
                 </li>
                 <li className="nav-item">
