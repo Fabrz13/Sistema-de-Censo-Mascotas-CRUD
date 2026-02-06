@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { useAuth } from '@context/AuthContext';
 
 function Login() {
     const [credentials, setCredentials] = useState({
@@ -8,7 +9,9 @@ function Login() {
         password: ''
     });
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
+
+    // ✅ CAMBIO: usamos el login del contexto
+    const { loginWithToken } = useAuth();
 
     const handleChange = (e) => {
         setCredentials({
@@ -19,10 +22,14 @@ function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
+
         try {
             const response = await api.login(credentials);
-            localStorage.setItem('token', response.data.token);
-            navigate('/');
+
+            // ✅ CAMBIO: esto guarda token y dispara fetchUser automáticamente
+            await loginWithToken(response.data.token);
+
         } catch (err) {
             setError('Credenciales incorrectas');
         }
