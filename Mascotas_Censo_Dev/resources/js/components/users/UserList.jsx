@@ -9,17 +9,18 @@ import {
 } from '@tanstack/react-table';
 import api from '../../services/api';
 import { useAuth } from '@context/AuthContext';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
+// 🎨 Color principal
+const PRIMARY_COLOR = '#1EC7A6';
+const PRIMARY_SOFT = 'rgba(30,199,166,0.14)';
+const PRIMARY_SOFT_2 = 'rgba(30,199,166,0.08)';
 
 export default function UserList() {
   const [originalData, setOriginalData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState({
-    name: '',
-    email: ''
-  });
-
-  // ✅ false => HABILITADOS | true => DESHABILITADOS
+  const [filters, setFilters] = useState({ name: '', email: '' });
   const [showDisabled, setShowDisabled] = useState(false);
 
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function UserList() {
   const handleDisable = async (id) => {
     if (!window.confirm('¿Seguro que deseas deshabilitar este usuario?')) return;
     try {
-      await api.deleteUser(id); // tu endpoint actual de deshabilitar
+      await api.deleteUser(id);
       await fetchUsers();
     } catch (e) {
       console.error(e);
@@ -65,22 +66,15 @@ export default function UserList() {
     }
   };
 
-  // ✅ NUEVO: re-habilitar usuario
   const handleEnable = async (id) => {
     if (!window.confirm('¿Seguro que deseas habilitar este usuario nuevamente?')) return;
 
     try {
-      // ✅ Opción 1 (recomendada): define esto en tu services/api.js
-      // api.enableUser = (id) => axios.post(`/users/${id}/enable`)  (ejemplo)
       if (typeof api.enableUser === 'function') {
         await api.enableUser(id);
-      }
-      // ✅ Opción 2: si tu backend usa "restore" (soft delete)
-      else if (typeof api.restoreUser === 'function') {
+      } else if (typeof api.restoreUser === 'function') {
         await api.restoreUser(id);
-      }
-      // ✅ Opción 3: si tu backend expone updateStatus genérico
-      else if (typeof api.updateUserStatus === 'function') {
+      } else if (typeof api.updateUserStatus === 'function') {
         await api.updateUserStatus(id, 'HABILITADO');
       } else {
         throw new Error('No existe api.enableUser / api.restoreUser / api.updateUserStatus en services/api.js');
@@ -93,7 +87,7 @@ export default function UserList() {
     }
   };
 
-  // ✅ Contadores (sobre todo el dataset, NO sobre el filtrado por nombre/email)
+  // ✅ Contadores globales (dataset completo)
   const counts = useMemo(() => {
     let enabled = 0;
     let disabled = 0;
@@ -101,7 +95,6 @@ export default function UserList() {
     for (const u of originalData) {
       const st = normalizeStatus(u.status);
       if (st === 'DESHABILITADO') disabled++;
-      else if (st === 'HABILITADO') enabled++;
       else enabled++;
     }
 
@@ -109,12 +102,12 @@ export default function UserList() {
   }, [originalData]);
 
   const filteredData = useMemo(() => {
-    const nameQ = filters.name.toLowerCase();
-    const emailQ = filters.email.toLowerCase();
+    const nameQ = filters.name.toLowerCase().trim();
+    const emailQ = filters.email.toLowerCase().trim();
 
     const desiredStatus = showDisabled ? 'DESHABILITADO' : 'HABILITADO';
 
-    return originalData.filter(u => {
+    return originalData.filter((u) => {
       const n = (u.name || '').toLowerCase();
       const em = (u.email || '').toLowerCase();
 
@@ -128,91 +121,77 @@ export default function UserList() {
     });
   }, [originalData, filters, showDisabled]);
 
-  // ✅ Columnas dependen del modo (habilitados/deshabilitados)
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'name',
-      header: 'Nombre',
-      cell: info => <span className="fw-semibold">{info.getValue()}</span>
-    },
-    {
-      accessorKey: 'email',
-      header: 'Correo'
-    },
-    {
-      accessorKey: 'phone',
-      header: 'Teléfono'
-    },
-    {
-      accessorKey: 'address',
-      header: 'Dirección'
-    },
-
-    // ✅ ESTA COLUMNA CAMBIA SEGÚN showDisabled
-    {
-      id: showDisabled ? 'disabled_date' : 'created_date',
-      accessorFn: (row) => {
-        // cuando está deshabilitado, intentamos tomar disabled_at o deleted_at
-        if (showDisabled) return row.disabled_at || row.deleted_at || null;
-        return row.created_at || null;
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Nombre',
+        cell: (info) => <span className="fw-semibold">{info.getValue()}</span>
       },
-      header: showDisabled ? 'Fecha deshabilitación' : 'Creación',
-      cell: info => formatDate(info.getValue())
-    },
+      { accessorKey: 'email', header: 'Correo' },
+      { accessorKey: 'phone', header: 'Teléfono' },
+      { accessorKey: 'address', header: 'Dirección' },
 
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: info => {
-        const v = normalizeStatus(info.getValue());
-        const isEnabled = v === 'HABILITADO';
-        return (
-          <span className={`badge ${isEnabled ? 'bg-success' : 'bg-danger'}`}>
-            {isEnabled ? 'HABILITADO' : 'DESHABILITADO'}
-          </span>
-        );
-      }
-    },
+      {
+        id: showDisabled ? 'disabled_date' : 'created_date',
+        accessorFn: (row) => (showDisabled ? row.disabled_at || row.deleted_at || null : row.created_at || null),
+        header: showDisabled ? 'Fecha deshabilitación' : 'Creación',
+        cell: (info) => formatDate(info.getValue())
+      },
 
-    {
-      accessorKey: 'id',
-      header: 'Acciones',
-      enableSorting: false,
-      cell: info => (
-        <div className="d-flex gap-2">
-          <Link to={`/users/${info.getValue()}`} className="btn btn-sm btn-info">
-            <i className="bi bi-eye"></i>
-          </Link>
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: (info) => {
+          const v = normalizeStatus(info.getValue());
+          const isEnabled = v === 'HABILITADO';
+          return (
+            <span className={`badge ${isEnabled ? 'bg-success' : 'bg-danger'}`}>
+              {isEnabled ? 'HABILITADO' : 'DESHABILITADO'}
+            </span>
+          );
+        }
+      },
 
-          {/* Edit solo en habilitados (opcional). Si quieres, lo dejo en ambos */}
-          {!showDisabled && (
-            <Link to={`/users/${info.getValue()}/edit`} className="btn btn-sm btn-warning">
-              <i className="bi bi-pencil"></i>
+      {
+        accessorKey: 'id',
+        header: 'Acciones',
+        enableSorting: false,
+        cell: (info) => (
+          <div className="d-flex gap-2">
+            <Link to={`/users/${info.getValue()}`} className="btn btn-sm btn-outline-info" title="Ver">
+              <i className="bi bi-eye"></i>
             </Link>
-          )}
 
-          {/* ✅ BOTÓN CAMBIA SEGÚN MODO */}
-          {!showDisabled ? (
-            <button
-              onClick={() => handleDisable(info.getValue())}
-              className="btn btn-sm btn-danger"
-              title="Deshabilitar"
-            >
-              <i className="bi bi-trash"></i>
-            </button>
-          ) : (
-            <button
-              onClick={() => handleEnable(info.getValue())}
-              className="btn btn-sm btn-success"
-              title="Habilitar"
-            >
-              <i className="bi bi-check2-circle"></i>
-            </button>
-          )}
-        </div>
-      )
-    }
-  ], [showDisabled]);
+            {!showDisabled && (
+              <Link to={`/users/${info.getValue()}/edit`} className="btn btn-sm btn-outline-warning" title="Editar">
+                <i className="bi bi-pencil"></i>
+              </Link>
+            )}
+
+            {!showDisabled ? (
+              <button
+                onClick={() => handleDisable(info.getValue())}
+                className="btn btn-sm btn-outline-danger"
+                title="Deshabilitar"
+              >
+                <i className="bi bi-trash"></i>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleEnable(info.getValue())}
+                className="btn btn-sm btn-outline-success"
+                title="Habilitar"
+              >
+                <i className="bi bi-check2-circle"></i>
+              </button>
+            )}
+          </div>
+        )
+      }
+    ],
+    [showDisabled]
+  );
 
   const table = useReactTable({
     data: filteredData,
@@ -223,180 +202,220 @@ export default function UserList() {
     initialState: { pagination: { pageSize: 10 } }
   });
 
-    // ✅ Mientras se resuelve la sesión al refrescar, NO muestres "No autorizado"
-    if (authLoading) return <div className="text-center py-5">Cargando sesión...</div>;
+  // ✅ Fix: no mostrar "No autorizado" mientras se está resolviendo sesión
+  if (authLoading) return <div className="text-center py-5">Cargando sesión...</div>;
+  if (!token) return <div className="text-center py-5">Redirigiendo...</div>;
 
-    // Si no hay token, no debería estar aquí (opcional)
-    if (!token) return <div className="text-center py-5">Redirigiendo...</div>;
-
-    // Ya con auth resuelto: si no es superadmin, ahora sí
-    if (!isSuperadmin) {
+  if (!isSuperadmin) {
     return (
-        <div className="container py-4">
+      <div className="container py-4">
         <div className="alert alert-danger">No autorizado.</div>
-        </div>
+      </div>
     );
-    }
+  }
 
-    // Luego tu loading interno de usuarios
-    if (loading) return <div className="text-center py-5">Cargando usuarios...</div>;
+  if (loading) return <div className="text-center py-5">Cargando usuarios...</div>;
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Usuarios</h1>
-        <Link to="/users/new" className="btn btn-primary">
-          <i className="bi bi-plus-circle me-2"></i>Crear usuario
-        </Link>
-      </div>
-
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <input
-            className="form-control"
-            placeholder="Buscar por nombre"
-            value={filters.name}
-            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-          />
-        </div>
-        <div className="col-md-6">
-          <input
-            className="form-control"
-            placeholder="Buscar por correo"
-            value={filters.email}
-            onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div className="card shadow-sm">
-        <div className="card-body">
-
-          {/* ✅ PILL DENTRO DE LA TABLA (ENCIMA DE LAS COLUMNAS) */}
-          <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-            <div className="btn-group" role="group" aria-label="Filtro por status">
-              <button
-                type="button"
-                className={`btn btn-sm ${!showDisabled ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setShowDisabled(false)}
-              >
-                Habilitados <span className="badge text-bg-light ms-2">{counts.enabled}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`btn btn-sm ${showDisabled ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setShowDisabled(true)}
-              >
-                Deshabilitados <span className="badge text-bg-light ms-2">{counts.disabled}</span>
-              </button>
-            </div>
-
-            <div className="text-muted small">
-              Mostrando: <strong>{filteredData.length}</strong> usuarios
-            </div>
+    <div
+      className="container-fluid py-4"
+      style={{ background: `linear-gradient(180deg, ${PRIMARY_SOFT_2}, #ffffff)` }}
+    >
+      <div className="container">
+        {/* Header */}
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div>
+            <h1 className="mb-1">Usuarios</h1>
+            <div className="text-muted">Administra usuarios habilitados y deshabilitados</div>
           </div>
 
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                {table.getHeaderGroups().map(hg => (
-                  <tr key={hg.id}>
-                    {hg.headers.map(h => (
-                      <th
-                        key={h.id}
-                        colSpan={h.colSpan}
-                        onClick={h.column.getToggleSortingHandler()}
-                        style={{ cursor: h.column.getCanSort() ? 'pointer' : 'default' }}
-                      >
-                        <div className="d-flex align-items-center">
-                          {flexRender(h.column.columnDef.header, h.getContext())}
-                          {h.column.getCanSort() && (
-                            <span className="ms-2">
-                              {{
-                                asc: <i className="bi bi-sort-up"></i>,
-                                desc: <i className="bi bi-sort-down"></i>,
-                              }[h.column.getIsSorted()] ?? <i className="bi bi-filter"></i>}
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.length > 0 ? (
-                  table.getRowModel().rows.map(row => (
-                    <tr key={row.id}>
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+          <Link to="/users/new" className="btn text-white" style={{ backgroundColor: PRIMARY_COLOR }}>
+            <i className="bi bi-plus-circle me-2"></i>
+            Crear usuario
+          </Link>
+        </div>
+
+        {/* Filtros */}
+        <div className="card shadow-sm mb-3 border-0 rounded-4">
+          <div className="card-body">
+            <div className="row g-2">
+              <div className="col-12 col-md-6">
+                <label className="form-label small text-muted">Buscar por nombre</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-white">
+                    <i className="bi bi-person"></i>
+                  </span>
+                  <input
+                    className="form-control"
+                    placeholder="Ej: Juan Pérez"
+                    value={filters.name}
+                    onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <label className="form-label small text-muted">Buscar por correo</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-white">
+                    <i className="bi bi-envelope"></i>
+                  </span>
+                  <input
+                    className="form-control"
+                    placeholder="Ej: correo@censo.com"
+                    value={filters.email}
+                    onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+              {/* Tabs */}
+              <div className="btn-group" role="group" aria-label="Filtro por status">
+                <button
+                  type="button"
+                  className={`btn btn-sm ${!showDisabled ? '' : 'btn-outline-secondary'}`}
+                  style={!showDisabled ? { backgroundColor: PRIMARY_COLOR, color: 'white', borderColor: PRIMARY_COLOR } : {}}
+                  onClick={() => setShowDisabled(false)}
+                >
+                  Habilitados <span className="badge text-bg-light ms-2">{counts.enabled}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn btn-sm ${showDisabled ? '' : 'btn-outline-secondary'}`}
+                  style={showDisabled ? { backgroundColor: PRIMARY_COLOR, color: 'white', borderColor: PRIMARY_COLOR } : {}}
+                  onClick={() => setShowDisabled(true)}
+                >
+                  Deshabilitados <span className="badge text-bg-light ms-2">{counts.disabled}</span>
+                </button>
+              </div>
+
+              <div className="text-muted small">
+                Mostrando: <strong>{filteredData.length}</strong> usuario(s)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div className="card shadow-sm border-0 rounded-4">
+          <div className="card-body">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead className="table-light">
+                  {table.getHeaderGroups().map((hg) => (
+                    <tr key={hg.id}>
+                      {hg.headers.map((h) => (
+                        <th
+                          key={h.id}
+                          colSpan={h.colSpan}
+                          onClick={h.column.getToggleSortingHandler()}
+                          style={{
+                            cursor: h.column.getCanSort() ? 'pointer' : 'default',
+                            userSelect: 'none'
+                          }}
+                        >
+                          <div className="d-flex align-items-center">
+                            {flexRender(h.column.columnDef.header, h.getContext())}
+                            {h.column.getCanSort() && (
+                              <span className="ms-2">
+                                {{
+                                  asc: <i className="bi bi-sort-up"></i>,
+                                  desc: <i className="bi bi-sort-down"></i>
+                                }[h.column.getIsSorted()] ?? <i className="bi bi-filter"></i>}
+                              </span>
+                            )}
+                          </div>
+                        </th>
                       ))}
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={columns.length} className="text-center py-4">
-                      No se encontraron usuarios
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </thead>
 
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <div className="d-flex align-items-center gap-2">
-              <span>Mostrar:</span>
-              <select
-                className="form-select form-select-sm w-auto"
-                value={table.getState().pagination.pageSize}
-                onChange={e => table.setPageSize(Number(e.target.value))}
-              >
-                {[5, 10, 20, 30, 50].map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
-              <span>registros</span>
+                <tbody>
+                  {table.getRowModel().rows.length > 0 ? (
+                    table.getRowModel().rows.map((row) => (
+                      <tr key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={columns.length} className="text-center py-4">
+                        No se encontraron usuarios
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
 
-            <div className="d-flex align-items-center gap-2">
-              <button
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-                className="btn btn-sm btn-outline-secondary"
-              >
-                <i className="bi bi-chevron-double-left"></i>
-              </button>
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="btn btn-sm btn-outline-secondary"
-              >
-                <i className="bi bi-chevron-left"></i>
-              </button>
-              <span>
-                Página <strong>{table.getState().pagination.pageIndex + 1} de {table.getPageCount()}</strong>
-              </span>
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="btn btn-sm btn-outline-secondary"
-              >
-                <i className="bi bi-chevron-right"></i>
-              </button>
-              <button
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-                className="btn btn-sm btn-outline-secondary"
-              >
-                <i className="bi bi-chevron-double-right"></i>
-              </button>
+            {/* Paginación */}
+            <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <span>Mostrar:</span>
+                <select
+                  className="form-select form-select-sm w-auto"
+                  value={table.getState().pagination.pageSize}
+                  onChange={(e) => table.setPageSize(Number(e.target.value))}
+                >
+                  {[5, 10, 20, 30, 50].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+                <span>registros</span>
+              </div>
+
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+                <button
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+
+                <span>
+                  Página <strong>{table.getState().pagination.pageIndex + 1}</strong> de{' '}
+                  <strong>{table.getPageCount()}</strong>
+                </span>
+
+                <button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+                <button
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
 
+        <div className="text-center text-muted small mt-3">
+          © {new Date().getFullYear()} Vet Lomas • Lo mejor para tu mascota
         </div>
       </div>
     </div>
