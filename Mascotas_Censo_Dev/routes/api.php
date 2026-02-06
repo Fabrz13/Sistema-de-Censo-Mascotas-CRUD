@@ -31,5 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::patch('/medical-consultations/{medicalConsultation}/status', [MedicalConsultationController::class, 'updateStatus']);
 
+    Route::post('/users/{user}/enable', [UserController::class, 'enable']);
+
     Route::apiResource('users', UserController::class);
 });

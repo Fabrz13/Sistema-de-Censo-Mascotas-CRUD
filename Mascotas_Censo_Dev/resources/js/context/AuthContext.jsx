@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const navigate = useNavigate();
 
-    // ✅ CAMBIO: token como estado (para detectar cambios y recargar usuario)
+    // token como estado (para detectar cambios y recargar usuario)
     const [token, setToken] = useState(() => localStorage.getItem('token'));
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, [navigate]);
 
-    // ✅ CAMBIO: en vez de correr solo 1 vez, corre cada vez que cambie el token
+    // corre cada vez que cambie el token
     useEffect(() => {
         if (token) {
             setLoading(true);
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token, fetchUser]);
 
-    // ✅ NUEVO: login centralizado (guarda token y fuerza recarga de usuario)
+    // login centralizado (guarda token y fuerza recarga de usuario)
     const loginWithToken = async (newToken) => {
         localStorage.setItem('token', newToken);
         setToken(newToken); // dispara useEffect -> fetchUser()
@@ -60,50 +60,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    /**
-     * ✅ NUEVO: logout best-effort al cerrar pestaña
-     * (el navegador no garantiza 100% que llegue, pero keepalive es lo mejor)
-     */
-    const logoutOnTabClose = useCallback(() => {
-        const t = localStorage.getItem('token');
-        if (!t) return;
-
-        try {
-            fetch('/api/logout', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${t}`,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                keepalive: true,
-                body: JSON.stringify({}),
-            }).catch(() => {});
-        } catch (e) {
-            // ignore
-        } finally {
-            // cerrar sesión local sí o sí
-            localStorage.removeItem('token');
-        }
-    }, []);
-
-    useEffect(() => {
-        // solo registrar si hay token
-        if (!token) return;
-
-        const handleBeforeUnload = () => logoutOnTabClose();
-        const handlePageHide = () => logoutOnTabClose();
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        window.addEventListener('pagehide', handlePageHide);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-            window.removeEventListener('pagehide', handlePageHide);
-        };
-    }, [token, logoutOnTabClose]);
-
     return (
         <AuthContext.Provider value={{
             token,
@@ -111,7 +67,7 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser,
             loading,
             fetchUser,
-            loginWithToken, // ✅ expuesto para Login
+            loginWithToken,
             logout
         }}>
             {children}

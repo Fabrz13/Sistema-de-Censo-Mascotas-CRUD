@@ -19,8 +19,11 @@ export default function UserList() {
     email: ''
   });
 
+  // ✅ false => HABILITADOS | true => DESHABILITADOS
+  const [showDisabled, setShowDisabled] = useState(false);
+
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading, token } = useAuth();
 
   const isSuperadmin = currentUser?.role === 'superadmin';
 
@@ -42,10 +45,19 @@ export default function UserList() {
     fetchUsers();
   }, [isSuperadmin]);
 
-  const handleDelete = async (id) => {
+  const normalizeStatus = (status) => (status || '').toString().trim().toUpperCase();
+
+  const formatDate = (raw) => {
+    if (!raw) return '-';
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleString();
+  };
+
+  const handleDisable = async (id) => {
     if (!window.confirm('¿Seguro que deseas deshabilitar este usuario?')) return;
     try {
-      await api.deleteUser(id);
+      await api.deleteUser(id); // tu endpoint actual de deshabilitar
       await fetchUsers();
     } catch (e) {
       console.error(e);
@@ -53,19 +65,70 @@ export default function UserList() {
     }
   };
 
+  // ✅ NUEVO: re-habilitar usuario
+  const handleEnable = async (id) => {
+    if (!window.confirm('¿Seguro que deseas habilitar este usuario nuevamente?')) return;
+
+    try {
+      // ✅ Opción 1 (recomendada): define esto en tu services/api.js
+      // api.enableUser = (id) => axios.post(`/users/${id}/enable`)  (ejemplo)
+      if (typeof api.enableUser === 'function') {
+        await api.enableUser(id);
+      }
+      // ✅ Opción 2: si tu backend usa "restore" (soft delete)
+      else if (typeof api.restoreUser === 'function') {
+        await api.restoreUser(id);
+      }
+      // ✅ Opción 3: si tu backend expone updateStatus genérico
+      else if (typeof api.updateUserStatus === 'function') {
+        await api.updateUserStatus(id, 'HABILITADO');
+      } else {
+        throw new Error('No existe api.enableUser / api.restoreUser / api.updateUserStatus en services/api.js');
+      }
+
+      await fetchUsers();
+    } catch (e) {
+      console.error(e);
+      alert(e?.response?.data?.message || 'No se pudo habilitar el usuario');
+    }
+  };
+
+  // ✅ Contadores (sobre todo el dataset, NO sobre el filtrado por nombre/email)
+  const counts = useMemo(() => {
+    let enabled = 0;
+    let disabled = 0;
+
+    for (const u of originalData) {
+      const st = normalizeStatus(u.status);
+      if (st === 'DESHABILITADO') disabled++;
+      else if (st === 'HABILITADO') enabled++;
+      else enabled++;
+    }
+
+    return { enabled, disabled };
+  }, [originalData]);
+
   const filteredData = useMemo(() => {
     const nameQ = filters.name.toLowerCase();
     const emailQ = filters.email.toLowerCase();
 
+    const desiredStatus = showDisabled ? 'DESHABILITADO' : 'HABILITADO';
+
     return originalData.filter(u => {
       const n = (u.name || '').toLowerCase();
       const em = (u.email || '').toLowerCase();
+
       const matchName = nameQ ? n.includes(nameQ) : true;
       const matchEmail = emailQ ? em.includes(emailQ) : true;
-      return matchName && matchEmail;
-    });
-  }, [originalData, filters]);
 
+      const st = normalizeStatus(u.status);
+      const matchStatus = st === desiredStatus;
+
+      return matchName && matchEmail && matchStatus;
+    });
+  }, [originalData, filters, showDisabled]);
+
+  // ✅ Columnas dependen del modo (habilitados/deshabilitados)
   const columns = useMemo(() => [
     {
       accessorKey: 'name',
@@ -84,24 +147,33 @@ export default function UserList() {
       accessorKey: 'address',
       header: 'Dirección'
     },
+
+    // ✅ ESTA COLUMNA CAMBIA SEGÚN showDisabled
     {
-      accessorKey: 'created_at',
-      header: 'Creación',
-      cell: info => {
-        const raw = info.getValue();
-        if (!raw) return '-';
-        return new Date(raw).toLocaleString();
-      }
+      id: showDisabled ? 'disabled_date' : 'created_date',
+      accessorFn: (row) => {
+        // cuando está deshabilitado, intentamos tomar disabled_at o deleted_at
+        if (showDisabled) return row.disabled_at || row.deleted_at || null;
+        return row.created_at || null;
+      },
+      header: showDisabled ? 'Fecha deshabilitación' : 'Creación',
+      cell: info => formatDate(info.getValue())
     },
+
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: info => (
-        <span className={`badge ${info.getValue() === 'HABILITADO' ? 'bg-success' : 'bg-danger'}`}>
-          {info.getValue()}
-        </span>
-      )
+      cell: info => {
+        const v = normalizeStatus(info.getValue());
+        const isEnabled = v === 'HABILITADO';
+        return (
+          <span className={`badge ${isEnabled ? 'bg-success' : 'bg-danger'}`}>
+            {isEnabled ? 'HABILITADO' : 'DESHABILITADO'}
+          </span>
+        );
+      }
     },
+
     {
       accessorKey: 'id',
       header: 'Acciones',
@@ -111,19 +183,36 @@ export default function UserList() {
           <Link to={`/users/${info.getValue()}`} className="btn btn-sm btn-info">
             <i className="bi bi-eye"></i>
           </Link>
-          <Link to={`/users/${info.getValue()}/edit`} className="btn btn-sm btn-warning">
-            <i className="bi bi-pencil"></i>
-          </Link>
-          <button
-            onClick={() => handleDelete(info.getValue())}
-            className="btn btn-sm btn-danger"
-          >
-            <i className="bi bi-trash"></i>
-          </button>
+
+          {/* Edit solo en habilitados (opcional). Si quieres, lo dejo en ambos */}
+          {!showDisabled && (
+            <Link to={`/users/${info.getValue()}/edit`} className="btn btn-sm btn-warning">
+              <i className="bi bi-pencil"></i>
+            </Link>
+          )}
+
+          {/* ✅ BOTÓN CAMBIA SEGÚN MODO */}
+          {!showDisabled ? (
+            <button
+              onClick={() => handleDisable(info.getValue())}
+              className="btn btn-sm btn-danger"
+              title="Deshabilitar"
+            >
+              <i className="bi bi-trash"></i>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleEnable(info.getValue())}
+              className="btn btn-sm btn-success"
+              title="Habilitar"
+            >
+              <i className="bi bi-check2-circle"></i>
+            </button>
+          )}
         </div>
       )
     }
-  ], []);
+  ], [showDisabled]);
 
   const table = useReactTable({
     data: filteredData,
@@ -134,17 +223,23 @@ export default function UserList() {
     initialState: { pagination: { pageSize: 10 } }
   });
 
-  if (!isSuperadmin) {
-    return (
-      <div className="container py-4">
-        <div className="alert alert-danger">
-          No autorizado.
-        </div>
-      </div>
-    );
-  }
+    // ✅ Mientras se resuelve la sesión al refrescar, NO muestres "No autorizado"
+    if (authLoading) return <div className="text-center py-5">Cargando sesión...</div>;
 
-  if (loading) return <div className="text-center py-5">Cargando usuarios...</div>;
+    // Si no hay token, no debería estar aquí (opcional)
+    if (!token) return <div className="text-center py-5">Redirigiendo...</div>;
+
+    // Ya con auth resuelto: si no es superadmin, ahora sí
+    if (!isSuperadmin) {
+    return (
+        <div className="container py-4">
+        <div className="alert alert-danger">No autorizado.</div>
+        </div>
+    );
+    }
+
+    // Luego tu loading interno de usuarios
+    if (loading) return <div className="text-center py-5">Cargando usuarios...</div>;
 
   return (
     <div className="container py-4">
@@ -176,6 +271,32 @@ export default function UserList() {
 
       <div className="card shadow-sm">
         <div className="card-body">
+
+          {/* ✅ PILL DENTRO DE LA TABLA (ENCIMA DE LAS COLUMNAS) */}
+          <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div className="btn-group" role="group" aria-label="Filtro por status">
+              <button
+                type="button"
+                className={`btn btn-sm ${!showDisabled ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setShowDisabled(false)}
+              >
+                Habilitados <span className="badge text-bg-light ms-2">{counts.enabled}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`btn btn-sm ${showDisabled ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setShowDisabled(true)}
+              >
+                Deshabilitados <span className="badge text-bg-light ms-2">{counts.disabled}</span>
+              </button>
+            </div>
+
+            <div className="text-muted small">
+              Mostrando: <strong>{filteredData.length}</strong> usuarios
+            </div>
+          </div>
+
           <div className="table-responsive">
             <table className="table table-hover">
               <thead className="table-light">

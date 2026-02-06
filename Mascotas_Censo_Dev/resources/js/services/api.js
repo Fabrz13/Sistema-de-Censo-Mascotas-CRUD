@@ -122,4 +122,8 @@ export default {
     deleteUser(id) {
         return api.delete(`/users/${id}`);
     },
+
+    enableUser(id) {
+        return api.post(`/users/${id}/enable`);
+    }, 
 };

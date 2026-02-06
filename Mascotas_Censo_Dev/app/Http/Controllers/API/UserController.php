@@ -28,7 +28,7 @@ class UserController extends Controller
         $this->ensureSuperadmin($request);
 
         return Owner::query()
-            ->select('id', 'name', 'email', 'phone', 'address', 'created_at', 'status', 'role')
+            ->select('id', 'name', 'email', 'phone', 'address', 'created_at', 'disabled_at', 'status', 'role')
             ->orderBy('name')
             ->get();
     }
@@ -64,7 +64,7 @@ class UserController extends Controller
     {
         $this->ensureSuperadmin($request);
 
-        return $user->only(['id', 'name', 'email', 'phone', 'address', 'created_at', 'status', 'role']);
+        return $user->only(['id', 'name', 'email', 'phone', 'address', 'created_at', 'status', 'disabled_at', 'role']);
     }
 
     public function update(Request $request, Owner $user)
@@ -101,14 +101,29 @@ class UserController extends Controller
     {
         $this->ensureSuperadmin($request);
 
-        // Evitar que el superadmin se deshabilite a sí mismo (opcional pero recomendado)
         if ((int)$request->user()->id === (int)$user->id) {
             return response()->json(['message' => 'No puedes deshabilitar tu propio usuario'], 422);
         }
 
         $user->status = 'DESHABILITADO';
+        $user->disabled_at = now();
         $user->save();
 
         return response()->json(['message' => 'Usuario deshabilitado correctamente']);
+    }
+
+    public function enable(Request $request, Owner $user)
+    {
+        $this->ensureSuperadmin($request);
+
+        if ((int)$request->user()->id === (int)$user->id) {
+            return response()->json(['message' => 'No puedes habilitar tu propio usuario desde aquí'], 422);
+        }
+
+        $user->status = 'HABILITADO';
+        $user->disabled_at = null;
+        $user->save();
+
+        return response()->json(['message' => 'Usuario habilitado correctamente']);
     }
 }

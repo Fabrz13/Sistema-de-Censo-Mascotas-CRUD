@@ -37,6 +37,7 @@ class Owner extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'location' => 'array',
+        'disabled_at' => 'datetime',
     ];
 
     public function pets()
