@@ -10,7 +10,7 @@ import UserList from './components/users/UserList';
 import UserForm from './components/users/UserForm';
 
 const PrivateRoute = ({ children }) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
     return token ? children : <Navigate to="/login" />;
 };
 
