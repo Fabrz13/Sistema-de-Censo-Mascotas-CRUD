@@ -117,6 +117,14 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
                         {expanded && mascotasLabel}
                     </Link>
                 </li>
+                {currentUser?.role === 'superadmin' && (
+                <li className="nav-item">
+                    <Link to="/users" className="nav-link text-white d-flex align-items-center">
+                    <i className="bi bi-people me-2"></i>
+                    {expanded && 'Usuarios'}
+                    </Link>
+                </li>
+                )}
                 {/* Puedes agregar más opciones aquí */}
             </ul>
 

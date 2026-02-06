@@ -103,4 +103,23 @@ export default {
         return api.patch(`/medical-consultations/${id}/status`, { status });
     },
 
+    getUsers() {
+        return api.get('/users');
+    },
+
+    getUser(id) {
+        return api.get(`/users/${id}`);
+    },
+
+    createUser(payload) {
+        return api.post('/users', payload);
+    },
+
+    updateUser(id, payload) {
+        return api.put(`/users/${id}`, payload);
+    },
+
+    deleteUser(id) {
+        return api.delete(`/users/${id}`);
+    },
 };

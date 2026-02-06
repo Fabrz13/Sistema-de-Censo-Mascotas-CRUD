@@ -6,6 +6,8 @@ import Register from './components/auth/Register';
 import Profile from './components/profile/Profile';
 import ScheduleMedicalConsultation from "./components/consultations/ScheduleMedicalConsultation";
 import MedicalConsultationList from "./components/consultations/MedicalConsultationList";
+import UserList from './components/users/UserList';
+import UserForm from './components/users/UserForm';
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -41,6 +43,31 @@ export default function AppRoutes() {
                     <MedicalConsultationList />
                 </PrivateRoute>
             } />
+
+                        <Route path="/users" element={
+                <PrivateRoute>
+                    <UserList />
+                </PrivateRoute>
+            } />
+
+            <Route path="/users/new" element={
+                <PrivateRoute>
+                    <UserForm />
+                </PrivateRoute>
+            } />
+
+            <Route path="/users/:id" element={
+                <PrivateRoute>
+                    <UserForm />
+                </PrivateRoute>
+            } />
+
+            <Route path="/users/:id/edit" element={
+                <PrivateRoute>
+                    <UserForm />
+                </PrivateRoute>
+            } />
+
 
             <Route path="/pets/new" element={
                 <PrivateRoute>
